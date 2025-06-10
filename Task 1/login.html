@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .error {
+      color: red;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    .success {
+      color: green;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+    .register-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .register-link a {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h2>Login</h2>
+  <form id="loginForm" method="POST">
+    <div class="form-group">
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      <div class="error" id="emailError"></div>
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required>
+      <div class="error" id="passwordError"></div>
+    </div>
+
+    <button type="submit">Login</button>
+  </form>
+
+  <div id="response"></div>
+
+  <div class="register-link">
+    Don't have an account? <a href="register.html">Register here</a>
+  </div>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      
+      // Clear previous error messages
+      document.querySelectorAll('.error').forEach(el => el.textContent = '');
+      document.getElementById('response').textContent = '';
+      
+      const formData = new FormData(this);
+      
+      try {
+        const response = await fetch("api/login.php", {
+          method: "POST",
+          body: formData
+        });
+
+        const result = await response.json();
+        const responseElement = document.getElementById("response");
+        
+        if (result.status === "success") {
+          responseElement.textContent = "Login successful!";
+          responseElement.className = "success";
+          
+          // If there's a redirect URL, wait a moment and then redirect
+          if (result.redirect) {
+            setTimeout(() => {
+              window.location.href = result.redirect;
+            }, 1000); // Wait 1 second before redirecting
+          }
+        } else {
+          responseElement.textContent = result.message;
+          responseElement.className = "error";
+          
+          // Display specific field errors if they exist
+          if (result.errors) {
+            result.errors.forEach(error => {
+              if (error.includes('email')) {
+                document.getElementById('emailError').textContent = error;
+              } else if (error.includes('password')) {
+                document.getElementById('passwordError').textContent = error;
+              }
+            });
+          }
+        }
+      } catch (error) {
+        document.getElementById("response").textContent = "Error: " + error.message;
+        document.getElementById("response").className = "error";
+      }
+    });
+  </script>
+</body>
+</html>
